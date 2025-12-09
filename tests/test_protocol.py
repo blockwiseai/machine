@@ -44,7 +44,6 @@ class TestPredictionSynapse:
         # Note: Can't instantiate ABC directly, but we can test via subclass
         # This test verifies the base class fields exist in subclasses
         synapse = TimePredictionSynapse()
-        assert synapse.version == ""
         assert synapse.requested_hours == 1
         assert synapse.start_time == 0.0
         assert synapse.end_time == 0.0

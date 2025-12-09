@@ -73,7 +73,7 @@ class TestUIDTracker:
         uid_tracker.add_busy_uids([0, 1, 2], MechanismType.ERA5)
         uid_tracker.mark_finished([0, 1], MechanismType.ERA5, good=True)
         # Check that last_good_uids was updated (internal check)
-        responding = uid_tracker.get_responding_uids(k=2, mechanism=MechanismType.ERA5)
+        responding = uid_tracker.get_responding_uids(mechanism=MechanismType.ERA5)
         assert len(responding) <= 2
 
     def test_get_responding_uids_returns_good_uids(self, uid_tracker):
@@ -83,7 +83,7 @@ class TestUIDTracker:
         uid_tracker.mark_finished([2], MechanismType.ERA5, good=False)
         
         # Should get the good UIDs
-        result = uid_tracker.get_responding_uids(k=2, mechanism=MechanismType.ERA5)
+        result = uid_tracker.get_responding_uids(mechanism=MechanismType.ERA5)
         assert len(result) <= 2
 
     def test_get_responding_uids_excludes_busy(self, uid_tracker):
@@ -92,7 +92,7 @@ class TestUIDTracker:
         uid_tracker.mark_finished([0, 1], MechanismType.ERA5, good=True)
         uid_tracker.add_busy_uids([0], MechanismType.ERA5)  # Make 0 busy again
         
-        result = uid_tracker.get_responding_uids(k=2, mechanism=MechanismType.ERA5)
+        result = uid_tracker.get_responding_uids(mechanism=MechanismType.ERA5)
         assert 0 not in result or len(result) == 0
 
     def test_thread_safety(self, uid_tracker):
