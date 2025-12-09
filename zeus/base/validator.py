@@ -304,6 +304,7 @@ class BaseValidatorNeuron(BaseNeuron):
             netuid=self.config.netuid,
             subtensor=self.subtensor,
             metagraph=self.metagraph,
+            mechid=mechanism.value,
         )
         bt.logging.debug(f"[{mechanism.name}] processed_weights", processed_weights)
         bt.logging.debug(f"[{mechanism.name}] processed_weight_uids", processed_weight_uids)

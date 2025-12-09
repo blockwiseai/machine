@@ -81,7 +81,7 @@ class Validator(BaseValidatorNeuron):
         return await forward(self)
     
     def prune_hotkeys(self, hotkeys):
-        super().prune_hotkeys()
+        super().prune_hotkeys(hotkeys=hotkeys)
         if self.is_running: # make sure init is finalised
             self.database.prune_hotkeys(hotkeys)
     

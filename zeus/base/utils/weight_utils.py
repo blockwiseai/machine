@@ -129,6 +129,7 @@ def process_weights_for_netuid(
     subtensor: "bittensor.subtensor",
     metagraph: "bittensor.metagraph" = None,
     exclude_quantile: int = 0,
+    mechid: int = 0,
 ) -> Union[
     tuple[
         ndarray[Any, dtype[Any]],
@@ -148,20 +149,31 @@ def process_weights_for_netuid(
     bittensor.logging.debug("netuid", netuid)
     bittensor.logging.debug("subtensor", subtensor)
     bittensor.logging.debug("metagraph", metagraph)
+    bittensor.logging.debug("mechid", mechid)
 
     # Get latest metagraph from chain if metagraph is None.
     if metagraph is None:
-        metagraph = subtensor.metagraph(netuid)
+        try:
+            metagraph = subtensor.metagraph(netuid=netuid, mechid=mechid)
+        except TypeError:
+            # Fallback for legacy interface without mechid support.
+            metagraph = subtensor.metagraph(netuid)
 
     # Cast weights to floats.
-    if not isinstance(weights, np.ndarray) or weights.dtype != np.float32:
+    if not isinstance(weights, np.ndarray):
+        weights = np.array(weights, dtype=np.float32)
+    elif weights.dtype != np.float32:
         weights = weights.astype(np.float32)
 
     # Network configuration parameters from an subtensor.
     # These parameters determine the range of acceptable weights for each neuron.
     quantile = exclude_quantile / U16_MAX
-    min_allowed_weights = subtensor.min_allowed_weights(netuid=netuid)
-    max_weight_limit = subtensor.max_weight_limit(netuid=netuid)
+    try:
+        min_allowed_weights = subtensor.min_allowed_weights(netuid=netuid, mechid=mechid)
+        max_weight_limit = subtensor.max_weight_limit(netuid=netuid, mechid=mechid)
+    except TypeError:
+        min_allowed_weights = subtensor.min_allowed_weights(netuid=netuid)
+        max_weight_limit = subtensor.max_weight_limit(netuid=netuid)
     bittensor.logging.debug("quantile", quantile)
     bittensor.logging.debug("min_allowed_weights", min_allowed_weights)
     bittensor.logging.debug("max_weight_limit", max_weight_limit)
