@@ -5,41 +5,73 @@
 
 
 ![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)
+<style>h1,h2,h3,h4 { border-bottom: 0; } </style>
 
 Welcome to the Zeus Subnet! This repository contains all the necessary information to get started, understand our subnet architecture, and contribute.
 
 
-## Quick Links
+### Quick Links
+- [Incentive mechanism 🎁](docs/IncentiveMechanism.md)
+- [Scoring system breakdown 📈](docs/DifficultyScoring.ipynb)
 - [Mining Guide ⛏️](docs/Mining.md)
-- [Incentive mechanism 🎁](docs/RewardFunction.ipynb)
 - [Validator Guide 🔧](docs/Validating.md)
 
 > [!IMPORTANT]
 > If you are new to Bittensor, we recommend familiarizing yourself with the basics on the [Bittensor Website](https://bittensor.com/) before proceeding.
 
-## Predicting future environmental variables within a decentralized framework
+---
+# Predicting future environmental variables within a decentralized framework
 
-**Overview:**
-The Zeus Subnet leverages advanced AI models within the Bittensor network to forecast environmental data. This platform is engineered on a decentralized, incentive-driven framework to enhance trustworthiness and stimulate continuous technological advancement. The datasource for this subnet consists of ERA5 reanalysis data from the Climate Data Store (CDS) of the European Union's Earth observation programme (Copernicus). This comprises the largest global environmental dataset to date, containing hourly measurements from 1940 until the present across a multitude of hundreds of variables. Validators can stream data from this data source in real-time, allowing miners to be queried on terrabytes of data.
+### Overview
+The Zeus subnet leverages advanced AI models within the Bittensor network to forecast environmental data at two distinct scales: Global and Hyperlocal.
+Our platform is engineered to replace expensive, physics-based simulations with efficient, data-driven AI architectures. To achieve this, the subnet operates as a unified forecasting engine with two parallel challenges:
+1. **Global (On-the-Grid):** Forecasting macro-scale variables using ERA5 reanalysis data from Copernicus (ECMWF). This is the largest global environmental dataset to date.
+2. **Hyperlocal (Off-the-Grid):** Forecasting precise weather conditions at specific coordinates using real-time data from the WeatherXM network.
 
-**Purpose:**
-Traditionally, environmental forecasting is achieved through physics-based numerical weather/environmental prediction (NWP). While this allows for very accurate predictions, it is also highly cost-ineffective, requiring large amounts of computing power for a single forecast. Furthermore, predictions are time expensive to obtain, since the simulation process of these NWP algorithms can take multiple hours to finish. Currently, there is a lot of ongoing research into the development of intelligent, data-driven algorithms for environmental prediction. Such algorithms can potentially be much faster, more accurate, at a fraction of the cost and carbon emissions. This subnet incentives the development of novel and groundbreaking architectures for enviromental data prediction. Through the continious evolution of this subnet, we are able to allow miners to tackle increasingly difficult problems over time.
+Validators stream data from these sources in real-time, querying miners on gigabytes of data across both modalities.
 
-**Features:**
+### Purpose
+Traditionally, environmental forecasting relies on physics-based Numerical Weather Prediction (NWP). While accurate, NWP is highly cost-ineffective, requiring massive supercomputers and hours of simulation time for a single forecast.
 
-- **Model Evolution:** Our platform continuously integrates the latest research and developments in AI to adapt to evolving generative techniques.
+Zeus incentives the development of AI-driven forecasting. These models are faster, cheaper, and increasingly more accurate than traditional methods. By operating distinct lanes for global and local data, we allow miners to specialize in different model architectures, solving the problem of planetary climate trends and street-level weather simultaneously.
 
-**Core Components:**
+### How it Works: Artificial Metagraph Separation
+To maintain high performance across both data modalities, Zeus uses a system of distinct challenges. Miners cannot be generalists; they must specialize in one domain to compete effectively.
 
-- **Miners:** Tasked with running forecasting algorithms that predict environmental variables at specific locations and timestamps.
-  - **Research Integration:** We systematically update our detection models and methodologies in response to emerging academic research. Through the global ERA5 dataset, we are able to provide validators and miners with near infinite amounts of environmental data, which can also be used for training their models. All data is publicly available to everyone.
-- **Validators:** Responsible for challenging miners with a subsets of environmental data and evaluating miner performance on heldout data.
-  - **Resource Expansion:** We continuously add new enviromental challenges and data modalities to our subnet in order to evolve our subnet and solve a multitude of distinct problems.
+**1. Synapse Selection**
 
-## Community
+When running a miner, you must explicitly choose your path. You will send a synapse to the validators stating which challenge you are targeting: ERA5 (Global) or WeatherXM (Hyperlocal).
+
+**2. Targeted Weights**
+
+We enforce strict separation to ensure fair competition. You can switch preferences at any time, but you cannot accumulate scores in both lanes simultaneously.
+ - Targeted Weights: You only compete against other miners in your chosen track.
+ - If you choose the WeatherXM track, your score for the ERA5 track is mathematically forced to zero (and vice versa).
+
+**3. Incentivized Slots & The Safe Zone**
+
+The subnet supports **512 UIDs** to allow for robust competition without immediate deregistration pressure. The metagraph is divided into two sections:
+
+- **Incentivized Slots (Top 256):**
+    - 128 Slots are reserved for the top-performing ERA5 miners.
+    - 128 Slots are reserved for the top-performing WeatherXM miners.
+    - Only miners in these slots receive TAO emissions.
+
+- **The Safe Zone (Bottom 256):**
+    - If you rank below number 128 in your chosen mechanism (or are a newly registered miner), your weight is set to zero and you fall into the Safe Zone.
+    - **Purpose:** This "buffer" eliminates immediate registration pressure. It gives new miners a safe space to deploy, test, and prove their performance.
+    - **Deregistration:** Deregistration occurs from the bottom of the Safe Zone. Unless a new miner is strictly better than the existing top 128 performers in their lane, they will eventually be deregistered, protecting the established, high-quality miners in the incentivized slots.
+
+### Core Components
+- **Miners:** Tasked with running forecasting algorithms for either ERA5 (global) or WeatherXM (local) challenges. Miners must select a specific lane to specialize in.
+- **Validators:** Responsible for challenging miners with subsets of environmental data, evaluating performance on held-out data, and enforcing the metagraph separation logic.
+- **Resource Expansion:** We continuously add new environmental variables and data modalities to our subnet in order to evolve our subnet and solve a multitude of distinct problems.
+
+---
+### Community
 For real-time discussions, community support, and regular updates, <a href="https://discord.com/invite/bittensor">join the bittensor discord</a>. Connect with developers, researchers, and users to get the most out of the Zeus Subnet.
 
-## License
+### License
 This repository is licensed under the MIT License.
 ```text
 # The MIT License (MIT)

@@ -61,7 +61,7 @@ btcli s register --netuid 301 --wallet.name [wallet_name] --wallet.hotkey [walle
 
 ## Validating
 Before launching your validator, make sure to create a file called `validator.env`. This file will not be tracked by git. 
-You can use the sample below as a starting point, but make sure to replace **wallet_name**, **wallet_hotkey**, **axon_port**, **wandb_api_key** and **cds_api_key**.
+You can use the sample below as a starting point, but make sure to replace **wallet_name**, **wallet_hotkey**, **axon_port**, **wandb_api_key**, **cds_api_key** and **weatherxm_api_key**.
 
 ```bash
 NETUID=18                                       # Network User ID options: 18,301
@@ -83,6 +83,7 @@ PROXY_PORT=
 WANDB_API_KEY=                  # https://wandb.ai/authorize
 CDS_API_KEY=                    # https://github.com/Orpheus-AI/Zeus/blob/main/docs/Validating.md#ecmwf
 OPEN_METEO_API_KEY=             # https://open-meteo.com/en/pricing#plans (Cheapest one suffices)
+WEATHERXM_API_KEY=              # https://pro.weatherxm.com/plans
 PROXY_API_KEY=                  # Your Proxy API Key, you can generate it yourself
 
 # Optional integrations
@@ -95,7 +96,10 @@ so we highly recommend enabling this.
 In order to validate you need an [OpenMeteo API key](https://open-meteo.com/en/pricing) for the API standard plan. After purchasing, it will be send to your email address!
 So look out for an email from info@open-meteo.com. Please enter the API key in the validator.env file, under the key `OPEN_METEO_API_KEY=mykey`.
 
-### 2. ECMWF
+### 2. WeatherXM
+In order to validate the hyperlocal challenges (requirement for **all** validators), you also need a [WeatherXM API Key](https://pro.weatherxm.com/plans). Since you need V1 forecasts for the baseline, you need to purchase the **Enterprise** plan!. After purchasing, the api key will be visible in their [online portal](https://pro.weatherxm.com/api-management), it should start with the letter 'e' (if not make a new one). Please enter the API key in the validator.env file, under the key `WEATHERXM_API_KEY=mykey`.
+
+### 3. ECMWF
 > [!IMPORTANT]
 > In order to send miners challenges involving the latest ERA5 data, you need to provide a Copernicus CDS API key. The steps below explain how to obtain this key. If you encounter any difficulty in the process, please let us know and we will create an account for you.
 
