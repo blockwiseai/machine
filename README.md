@@ -5,8 +5,6 @@
 
 
 ![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)
-<style>h1,h2,h3,h4 { border-bottom: 0; } </style>
-
 Welcome to the Zeus Subnet! This repository contains all the necessary information to get started, understand our subnet architecture, and contribute.
 
 
@@ -20,7 +18,13 @@ Welcome to the Zeus Subnet! This repository contains all the necessary informati
 > If you are new to Bittensor, we recommend familiarizing yourself with the basics on the [Bittensor Website](https://bittensor.com/) before proceeding.
 
 ---
-# Predicting future environmental variables within a decentralized framework
+<div id="toc">
+  <ul style="list-style: none;">
+    <summary>
+      <h1>Predicting future environmental variables within a decentralized framework</h1>
+    </summary>
+  </ul>
+</div>
 
 ### Overview
 The Zeus subnet leverages advanced AI models within the Bittensor network to forecast environmental data at two distinct scales: Global and Hyperlocal.
