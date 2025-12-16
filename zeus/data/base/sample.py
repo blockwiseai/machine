@@ -65,7 +65,16 @@ class BaseSample(ABC):
         Converts the sample to a synapse which miners can predict on.
         Note that the output data is NOT set in this synapse.
         """
-        pass
+        ...
+
+    @property
+    @abstractmethod
+    def desired_output_shape(self) -> torch.Size:
+        """
+        Return the shape that a correct prediction/output/baseline should be,
+        useful for quick first-stage penalty filtering and to prevent shape errors later on.
+        """
+        ...
 
     @abstractmethod
     def get_bbox(self) -> Tuple[float, float, float, float]:
@@ -73,7 +82,7 @@ class BaseSample(ABC):
         Returns the bounding box of the sample as:
         (lat_start, lat_end, lon_start, lon_end)
         """
-        pass
+        ...
 
     @property
     @abstractmethod
@@ -81,4 +90,4 @@ class BaseSample(ABC):
         """
         Returns the mechanism type of the sample.
         """
-        pass
+        ...

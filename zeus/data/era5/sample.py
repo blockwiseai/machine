@@ -64,6 +64,14 @@ class Era5Sample(BaseSample):
         """
         return self.lat_start, self.lat_end, self.lon_start, self.lon_end
 
+    @property
+    def desired_output_shape(self) -> torch.Size:
+        """
+        Return the shape that a correct prediction/output/baseline should be,
+        useful for quick first-stage penalty filtering and to prevent shape errors later on.
+        """
+        return torch.Size([self.hours_to_predict, *self.x_grid.shape[:2]])
+
     def get_synapse(self) -> TimePredictionSynapse:
         """
         Converts the sample to a synapse which miners can predict on.

@@ -26,6 +26,7 @@ import numpy as np
 import json
 from collections import defaultdict
 
+from zeus.validator.reward import get_shape_penalty
 from zeus.data.base.loader import BaseDataLoader
 from zeus.validator.constants import DATABASE_LOCATION
 from zeus.data.base.sample import BaseSample
@@ -240,8 +241,9 @@ class ResponseDatabase:
             # load the correct output and set it if it is available
             output = dataloader.get_output(sample)
             sample.output_data = output
-
-            if output is None or output.shape[0] != sample.hours_to_predict or not torch.isfinite(output).all():
+            
+            # make sure output would be valid
+            if get_shape_penalty(sample.desired_output_shape, output):
                 if sample.end_timestamp < (latest_available - pd.Timedelta(days=3).total_seconds()):
                     # challenge is unscore-able, delete it
                     self._delete_challenge(challenge_uid, dataloader.mechanism)
