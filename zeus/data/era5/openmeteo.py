@@ -18,6 +18,7 @@
 # DEALINGS IN THE SOFTWARE.
 
 import os
+import requests
 import openmeteo_requests
 
 import numpy as np
@@ -41,6 +42,16 @@ class OpenMeteoLoader(BasePredictor):
         self.api_key = os.getenv("OPEN_METEO_API_KEY")
         self.open_meteo_url = open_meteo_url
         self.open_meteo_api = openmeteo_requests.Client()
+
+    def get_elevation(self, latitude: float, longitude: float) -> float:
+        return requests.get(
+            self.open_meteo_url + "elevation", 
+            params={
+                "latitude": latitude,
+                "longitude": longitude,
+                "apikey": self.api_key
+            },
+        ).json()['elevation'][0]
 
     def get_forecast(self, sample: Era5Sample, model: str = "best_match") -> torch.Tensor:
         """
@@ -67,7 +78,7 @@ class OpenMeteoLoader(BasePredictor):
         }
 
         responses = self.open_meteo_api.weather_api(
-            self.open_meteo_url, params=params, method="POST"
+            self.open_meteo_url + "forecast", params=params, method="POST"
         )
 
         # get output as grid of [time, lat, lon, variables]

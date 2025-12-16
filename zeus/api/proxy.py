@@ -23,6 +23,7 @@ import os
 import time
 import asyncio
 import traceback
+from pathlib import Path
 
 import bittensor as bt
 import numpy as np
@@ -46,7 +47,7 @@ from zeus.base.validator import BaseValidatorNeuron
 from zeus.validator.reward import help_format_miner_output, get_shape_penalty
 from zeus.protocol import TimePredictionSynapse, LocalPredictionSynapse
 from zeus.utils.time import get_today, get_hours, safe_tz_convert
-from zeus.utils.coordinates import get_grid, expand_to_grid, interp_coordinates
+from zeus.utils.coordinates import get_grid, expand_to_grid, find_optimal_cell
 from zeus.data.era5.converter import get_converter, VariableConverter
 from zeus.data.weatherxm.variables import get_wxm_variable, WeatherXMVariable
 from zeus.validator.constants import MechanismType
@@ -61,6 +62,7 @@ class ValidatorProxy:
     def __init__(
         self,
         validator: BaseValidatorNeuron,
+        hsurf_path: str = "ERA5_hsurf.npz",
     ):
         self.proxy_api_key = os.getenv("PROXY_API_KEY")
         if not self.proxy_api_key or self.proxy_api_key == "":
@@ -71,6 +73,12 @@ class ValidatorProxy:
         self.timezone_finder = TimezoneFinder()
         self.validator = validator
         self.dendrite = ZeusDendrite(wallet=validator.wallet)
+
+        self.height_map = list(np.load(
+            Path(os.path.abspath(__file__)).parent / hsurf_path
+        ).values())[0]
+
+
         self.app = FastAPI()
         self.app.add_api_route(
             "/predictGrid",
@@ -219,8 +227,7 @@ class ValidatorProxy:
             lat = payload["lat"]
             lon = payload["lon"]
 
-            grid = expand_to_grid(lat, lon)
-
+            grid = expand_to_grid(lat, lon, min_size=3)
             start_time, end_time, predict_hours = self._parse_time_inputs(payload, MechanismType.ERA5)
             variable_conv = self._parse_era5_variable(payload)
 
@@ -244,7 +251,7 @@ class ValidatorProxy:
         self.validator.uid_tracker.add_busy_uids(miner_uids, MechanismType.ERA5)
         axons = [self.validator.metagraph.axons[uid] for uid in miner_uids]
 
-        prediction = self.safe_average(await self.dendrite(
+        predictions = self.safe_average(await self.dendrite(
             axons=axons,
             synapse=synapse,
             timeout=self.PROXY_TIMEOUT,
@@ -253,7 +260,15 @@ class ValidatorProxy:
         self.validator.uid_tracker.mark_finished(miner_uids, MechanismType.ERA5)
         bt.logging.info(f"[PROXY] Obtained a valid eager prediction.")
 
-        prediction = interp_coordinates(prediction, grid, lat, lon)
+        # perform optimal cell selection
+        target_elevation = self.validator.baseline_loaders[MechanismType.ERA5].get_elevation(lat, lon)
+        (rel_lat, rel_lon), cell_elevation = find_optimal_cell(self.height_map, lat, lon, target_elevation)
+        prediction = predictions[:, rel_lat, rel_lon]
+
+        # apply elevation correction for temperature variables
+        if variable_conv.elevation_adjustable:
+            prediction += (cell_elevation - target_elevation) * 0.0065
+
         expanded_loc = torch.tensor([lat, lon])[None, None, :]
         return self.format_response(
             request_start, 
