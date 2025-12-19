@@ -1,11 +1,26 @@
 import numpy as np
-from typing import Tuple, List, Union, Any
+from typing import Tuple, List, Union, Any, Optional, Callable
 import bittensor
 from numpy import ndarray, dtype, floating, complexfloating
+from zeus.utils.misc import ttl_cache
 
 U32_MAX = 4294967295
 U16_MAX = 65535
 
+@ttl_cache(maxsize=1, ttl=1000)
+def patched_blocks_since_last_update(
+    netuid: int, 
+    uid: int, 
+    delegate: Callable[[int, int], Optional[int]]
+) -> Optional[int]:
+        """
+        By default this function breaks setting weights for different mechanisms in succession,
+        since it doesn't keep track of which mechanism the weights have been set for
+
+        So we make it cache for a couple minutes, so the second mechanism will still retrieve
+          the value before this round of weight-setting
+        """
+        return delegate(netuid, uid)
 
 def normalize_max_weight(x: np.ndarray, limit: float = 0.1) -> np.ndarray:
     r"""Normalizes the numpy array x so that sum(x) = 1 and the max value is not greater than the limit.

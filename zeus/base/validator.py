@@ -28,8 +28,9 @@ import bittensor as bt
 from abc import abstractmethod
 from check_shapes import check_shapes
 
-from typing import List, Union, Dict
+from typing import List, Union, Dict, Optional
 from traceback import format_exception
+from functools import partial
 
 from zeus.base.dendrite import ZeusDendrite
 from zeus.base.neuron import BaseNeuron
@@ -37,6 +38,7 @@ from zeus.utils.uids import get_uids
 from zeus.base.utils.weight_utils import (
     process_weights_for_netuid,
     convert_weights_and_uids_for_emit,
+    patched_blocks_since_last_update,
 )
 from zeus.utils.misc import copy_fitting
 from zeus.utils.config import add_validator_args
@@ -65,6 +67,12 @@ class BaseValidatorNeuron(BaseNeuron):
 
         # Create asyncio event loop to manage async tasks.
         self.loop = asyncio.get_event_loop()
+
+        # monkeypatch to fix setting mechanism weights in succession
+        self.subtensor.blocks_since_last_update = partial(
+            patched_blocks_since_last_update,
+            delegate=self.subtensor.blocks_since_last_update
+        )
 
         # Dendrite lets us send messages to other nodes (axons) in the network.
         self.dendrite = ZeusDendrite(wallet=self.wallet)

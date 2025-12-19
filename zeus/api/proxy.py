@@ -74,9 +74,9 @@ class ValidatorProxy:
         self.validator = validator
         self.dendrite = ZeusDendrite(wallet=validator.wallet)
 
-        self.height_map = list(np.load(
+        self.height_map = torch.as_tensor(list(np.load(
             Path(os.path.abspath(__file__)).parent / hsurf_path
-        ).values())[0]
+        ).values())[0])
 
 
         self.app = FastAPI()
@@ -227,7 +227,7 @@ class ValidatorProxy:
             lat = payload["lat"]
             lon = payload["lon"]
 
-            grid = expand_to_grid(lat, lon, min_size=3)
+            grid = expand_to_grid(lat, lon, size=3)
             start_time, end_time, predict_hours = self._parse_time_inputs(payload, MechanismType.ERA5)
             variable_conv = self._parse_era5_variable(payload)
 
@@ -264,7 +264,6 @@ class ValidatorProxy:
         target_elevation = self.validator.baseline_loaders[MechanismType.ERA5].get_elevation(lat, lon)
         (rel_lat, rel_lon), cell_elevation = find_optimal_cell(self.height_map, lat, lon, target_elevation)
         prediction = predictions[:, rel_lat, rel_lon]
-
         # apply elevation correction for temperature variables
         if variable_conv.elevation_adjustable:
             prediction += (cell_elevation - target_elevation) * 0.0065

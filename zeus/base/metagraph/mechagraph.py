@@ -118,7 +118,6 @@ class Mechagraph(bt.Metagraph):
         
         # these are otherwise set for whole graph again so filter out
         self.identities = np.array(self.identities)[self.parent_idxs].tolist()
-        self.pruning_score = np.array(self.pruning_score)[self.parent_idxs].tolist()
         self.block_at_registration = np.array(self.block_at_registration)[self.parent_idxs].tolist()
         self.tao_dividends_per_hotkey = np.array(self.tao_dividends_per_hotkey)[self.parent_idxs].tolist()
         self.alpha_dividends_per_hotkey = np.array(self.alpha_dividends_per_hotkey)[self.parent_idxs].tolist()
