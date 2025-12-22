@@ -28,3 +28,4 @@ class Station:
     longitude: float
     elevation: float
     id: str
+    lastDayQod: str
