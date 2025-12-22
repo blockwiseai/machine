@@ -62,7 +62,7 @@ def help_format_miner_output(
         return response
 
 
-def get_shape_penalty(correct_shape: torch.Size, response: torch.Tensor) -> bool:
+def get_shape_penalty(correct_shape: torch.Size, response: Optional[torch.Tensor]) -> bool:
     """
     Compute penalty for predictions that are incorrectly shaped or contains NaN/infinities.
 
@@ -73,13 +73,13 @@ def get_shape_penalty(correct_shape: torch.Size, response: torch.Tensor) -> bool
     Returns:
         float: True if there is a shape penalty, False otherwise
     """
-    penalty = False
-    if response.shape != correct_shape:
-        penalty = True
+    if response is None:
+        return True
+    elif response.shape != correct_shape:
+        return True
     elif not torch.isfinite(response).all():
-        penalty = True
-
-    return penalty
+        return True
+    return False
 
 def rmse(
         output_data: torch.Tensor,

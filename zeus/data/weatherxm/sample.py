@@ -57,6 +57,14 @@ class WeatherXMSample(BaseSample):
         """
         return self.lat, self.lat, self.lon, self.lon
 
+    @property
+    def desired_output_shape(self) -> torch.Size:
+        """
+        Return the shape that a correct prediction/output/baseline should be,
+        useful for quick first-stage penalty filtering and to prevent shape errors later on.
+        """
+        return torch.Size([self.hours_to_predict])
+
     def get_synapse(self) -> LocalPredictionSynapse:
         """
         Converts the sample to a synapse which miners can predict on.

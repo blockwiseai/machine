@@ -41,6 +41,8 @@ class VariableConverter(ABC):
     short_code: str
     # Metric SI unit as string
     unit: str
+    # is we should adjust linearly based on elevation difference after grid cell selection
+    elevation_adjustable: bool = False
 
     def era5_to_om(self, data: Union[float, np.ndarray, torch.Tensor]) -> Union[float, np.ndarray, torch.Tensor]:
         return data
@@ -119,7 +121,7 @@ class SurfacePressureConverter(VariableConverter):
          
 
 REGISTRY = {converter.data_var: converter for converter in [
-        TemperatureConverter("2m_temperature", om_name="temperature_2m", short_code="t2m", unit="K"), 
+        TemperatureConverter("2m_temperature", om_name="temperature_2m", short_code="t2m", unit="K", elevation_adjustable=True), 
         PrecipitationConverter("total_precipitation", om_name="precipitation", short_code="tp", unit="m/h"),
         EastWindConverter(
             "100m_u_component_of_wind", 

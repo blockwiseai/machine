@@ -1,11 +1,26 @@
 import numpy as np
-from typing import Tuple, List, Union, Any
+from typing import Tuple, List, Union, Any, Optional, Callable
 import bittensor
 from numpy import ndarray, dtype, floating, complexfloating
+from zeus.utils.misc import ttl_cache
 
 U32_MAX = 4294967295
 U16_MAX = 65535
 
+@ttl_cache(maxsize=1, ttl=1000)
+def patched_blocks_since_last_update(
+    netuid: int, 
+    uid: int, 
+    delegate: Callable[[int, int], Optional[int]]
+) -> Optional[int]:
+        """
+        By default this function breaks setting weights for different mechanisms in succession,
+        since it doesn't keep track of which mechanism the weights have been set for
+
+        So we make it cache for a couple minutes, so the second mechanism will still retrieve
+          the value before this round of weight-setting
+        """
+        return delegate(netuid, uid)
 
 def normalize_max_weight(x: np.ndarray, limit: float = 0.1) -> np.ndarray:
     r"""Normalizes the numpy array x so that sum(x) = 1 and the max value is not greater than the limit.
@@ -129,6 +144,7 @@ def process_weights_for_netuid(
     subtensor: "bittensor.subtensor",
     metagraph: "bittensor.metagraph" = None,
     exclude_quantile: int = 0,
+    mechid: int = 0,
 ) -> Union[
     tuple[
         ndarray[Any, dtype[Any]],
@@ -148,20 +164,31 @@ def process_weights_for_netuid(
     bittensor.logging.debug("netuid", netuid)
     bittensor.logging.debug("subtensor", subtensor)
     bittensor.logging.debug("metagraph", metagraph)
+    bittensor.logging.debug("mechid", mechid)
 
     # Get latest metagraph from chain if metagraph is None.
     if metagraph is None:
-        metagraph = subtensor.metagraph(netuid)
+        try:
+            metagraph = subtensor.metagraph(netuid=netuid, mechid=mechid)
+        except TypeError:
+            # Fallback for legacy interface without mechid support.
+            metagraph = subtensor.metagraph(netuid)
 
     # Cast weights to floats.
-    if not isinstance(weights, np.ndarray) or weights.dtype != np.float32:
+    if not isinstance(weights, np.ndarray):
+        weights = np.array(weights, dtype=np.float32)
+    elif weights.dtype != np.float32:
         weights = weights.astype(np.float32)
 
     # Network configuration parameters from an subtensor.
     # These parameters determine the range of acceptable weights for each neuron.
     quantile = exclude_quantile / U16_MAX
-    min_allowed_weights = subtensor.min_allowed_weights(netuid=netuid)
-    max_weight_limit = subtensor.max_weight_limit(netuid=netuid)
+    try:
+        min_allowed_weights = subtensor.min_allowed_weights(netuid=netuid, mechid=mechid)
+        max_weight_limit = subtensor.max_weight_limit(netuid=netuid, mechid=mechid)
+    except TypeError:
+        min_allowed_weights = subtensor.min_allowed_weights(netuid=netuid)
+        max_weight_limit = subtensor.max_weight_limit(netuid=netuid)
     bittensor.logging.debug("quantile", quantile)
     bittensor.logging.debug("min_allowed_weights", min_allowed_weights)
     bittensor.logging.debug("max_weight_limit", max_weight_limit)

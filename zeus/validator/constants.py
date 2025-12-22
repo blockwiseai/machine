@@ -95,7 +95,7 @@ ERA5_DATA_VARS: Dict[str, float] = {
 ERA5_LATITUDE_RANGE: Tuple[float, float] = (-90.0, 90.0)
 ERA5_LONGITUDE_RANGE: Tuple[float, float] = (-180.0, 179.75)  # real ERA5 ranges
 # how many datapoints we want. The resolution is 0.25 degrees, so 4 means 1 degree.
-ERA5_AREA_SAMPLE_RANGE: Tuple[float, float] = (4, 16)
+ERA5_AREA_SAMPLE_RANGE: Tuple[float, float] = (3, 16)
 
 ERA5_CACHE_DIR: Path = Path.home() / ".cache" / "zeus" / "era5"
 COPERNICUS_ERA5_URL: str = "https://cds.climate.copernicus.eu/api"
@@ -106,7 +106,7 @@ ERA5_UNIFORM_START_OFFSET_PROB: float = 0.1
 # see plot of distribution in Zeus/static/era5_start_offset_distribution.png
 ERA5_START_SAMPLE_STD: float = 35 
 
-OPEN_METEO_URL: str = "https://customer-api.open-meteo.com/v1/forecast"
+OPEN_METEO_URL: str = "https://customer-api.open-meteo.com/v1/"
 
 # ------------------------------------------------------
 # ---------------- WeatherXM predictions ---------------

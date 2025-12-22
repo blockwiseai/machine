@@ -135,34 +135,81 @@ def gaussian_grid_sample(grid: Union[torch.Tensor, np.ndarray], stds_in_radius =
 
 
 def expand_to_grid(
-    lat: float, lon: float, fidelity: float = 4, min_size = ERA5_AREA_SAMPLE_RANGE[0],
+    lat: float, lon: float, fidelity: float = 4, size = ERA5_AREA_SAMPLE_RANGE[0],
 ) -> torch.Tensor:
     """
     Get a grid of lat-lon points for a single location based on the specified fidelity (degree).
-    If the specified lat or lon coordinate are exactly on a grid point that dimension will be min_size + 1,
-    otherwise it will be of min_size.
-    The output grid will have the same shape structure as the get_grid function.
+    Grid will be of shape (size, size), with middle point closest to requested (lat, lon)
+
+    NOTE: If expanding would go out of bounds, grid will be smaller accordingly!
+
+    Args:
+        lat: latitude of choice (-90, 90)
+        lon: longitude of choice (-180, 180)
+        fidelity: Optional, defaults to ERA5's 4.
+        size: odd number denoting size around nearest grid point
+
+    Returns:
+        torch.Tensor: The gridded representation  
     """
-    lat_start = math.floor(lat * fidelity) / fidelity
-    lat_end = math.ceil(lat * fidelity) / fidelity
+    assert size >= 1 and size % 2, "Min size needs to be an odd number"
+    
+    lat_centre = round(lat * fidelity) / fidelity
+    lon_centre = round(lon * fidelity) / fidelity
 
-    if lat_start == lat_end:
-        lat_start -= 1 / fidelity
-        lat_end += 1 / fidelity
+    expand = max(0, (size - 1) // 2) / fidelity
 
-    lon_start = math.floor(lon * fidelity) / fidelity
-    lon_end = math.ceil(lon * fidelity) / fidelity
-
-    if lon_start == lon_end:
-        lon_start -= 1 / fidelity
-        lon_end += 1 / fidelity
-
-    expand = max(0, (min_size - 2) // 2) / fidelity
     return get_grid(
-        lat_start - expand, lat_end + expand, 
-        lon_start - expand, lon_end + expand,
+        max(-90, lat_centre - expand), 
+        min(90, lat_centre + expand), 
+        max(-180, lon_centre - expand),
+        min(180, lon_centre + expand),
         fidelity=fidelity
     )
+
+
+@check_shapes(
+    "global_elevation: [721, 1440]",
+)
+def find_optimal_cell(
+    global_elevation: torch.Tensor, 
+    target_lat: float, 
+    target_lon: float, 
+    target_elevation: float,
+    grid_size : int = ERA5_AREA_SAMPLE_RANGE[0],
+) -> Tuple[Tuple[int, int], float]:
+    """
+    Perform optimal cell selection based on target altitude and location
+    Args:
+        era5_altitudes: Torch tensor of global elevation at ERA5 locations
+        target_lat: float, Latitude of the user query
+        target_lon: float, Longitude of the user query
+        target_elevation: float, Elevation of the user query (meters)
+        grid_size: shape of grid expanded around target location
+        
+    Returns:
+        Tuple[int, int]: indices relative to grid's first two axes of the optimal cell
+        float: Actual cell elevation
+    """
+    grid = expand_to_grid(target_lat, target_lon, size=grid_size)
+    elevation_slice = slice_bbox(global_elevation, get_bbox(grid))
+
+    sq_dists = (grid[..., 0] - target_lat) ** 2 + (grid[..., 1] - target_lon) ** 2
+    # Convert to km (Approximation: 1 degree ~ 111 km)
+    dists_km = sq_dists.sqrt() * 111.0
+
+    # For every 1km in distance, the elevation must be 30 m better
+    deltas = abs(elevation_slice - target_elevation) + dists_km * 30
+    # If all hughly off -> just use center
+    deltas[deltas.shape[0] // 2, deltas.shape[1] // 2] = min(deltas[deltas.shape[0] // 2, deltas.shape[1] // 2], 1500)
+    # find lowest relative index
+    [(rel_lat, rel_lon)] = (deltas == deltas.min()).nonzero()
+
+    cell_elevation = elevation_slice[rel_lat, rel_lon]
+    if cell_elevation <= -999:
+        cell_elevation = 0 # correct for sea
+
+    return (rel_lat, rel_lon), cell_elevation
 
 @check_shapes(
     "input: [time, lat, lon]",

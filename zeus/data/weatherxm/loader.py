@@ -82,7 +82,11 @@ class WeatherXMLoader(BaseDataLoader, BasePredictor):
         """
         Returns the headers for the WeatherXM API.
         """
-        return {"X-API-KEY": self.api_key}
+        return {
+             "Accept": "application/json",
+            "X-API-KEY": self.api_key
+        }
+
 
     def load_all_stations(self) -> Dict[str, Station]:
         """
@@ -301,7 +305,7 @@ class WeatherXMLoader(BaseDataLoader, BasePredictor):
         output.append(cur_best_value)
         return torch.Tensor(output)
 
-    def get_forecast(self, sample: WeatherXMSample) -> torch.Tensor:
+    def get_forecast(self, sample: WeatherXMSample) -> Optional[torch.Tensor]:        
         """
         Get the forecast for a sample using the WeatherXM V1 API.
         Returns:
@@ -313,15 +317,18 @@ class WeatherXMLoader(BaseDataLoader, BasePredictor):
             sample.lat, sample.lon, res=WEATHERXM_CELL_RESOLUTION
         )
 
-        cell_pred = requests.get(
+        api_response = requests.get(
             self.base_url + f"/cells/{h3cell}/forecast/wxmv1",
             params={
                 "include": "hourly",
                 "from": start_time.strftime("%Y-%m-%d"),
                 "to": end_time.strftime("%Y-%m-%d"),
             },
-            headers=self._get_headers(),
-        ).json()
+            headers=self._get_headers()
+        )
+        if not api_response.ok:
+            return
+        cell_pred = api_response.json()
 
         output = np.concat(
             [

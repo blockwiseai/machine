@@ -85,7 +85,7 @@ WALLET_HOTKEY=default
 # Miner Settings:
 AXON_PORT=
 BLACKLIST_FORCE_VALIDATOR_PERMIT=True          # Default setting to force validator permit for blacklisting
-WEATHER_XM_API_KEY=                            # Only required if you participate in the local challenges
+WEATHERXM_API_KEY=none                            # Only required if you participate in the local challenges
 ```
 
 ## Mining

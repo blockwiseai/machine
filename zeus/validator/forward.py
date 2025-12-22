@@ -21,6 +21,7 @@ from typing import List, Optional, Union, Dict
 from functools import partial
 import time
 import random
+from traceback import format_exc
 
 import bittensor as bt
 import wandb
@@ -32,7 +33,7 @@ from zeus.data.base.predictor import BasePredictor
 from zeus.data.base.sample import BaseSample
 from zeus.utils.misc import split_list
 from zeus.utils.time import timestamp_to_str
-from zeus.validator.reward import set_rewards, set_penalties, rmse
+from zeus.validator.reward import set_rewards, set_penalties, rmse, get_shape_penalty
 from zeus.validator.miner_data import MinerData
 from zeus.utils.logging import maybe_reset_wandb
 from zeus.base.validator import BaseValidatorNeuron
@@ -105,6 +106,13 @@ async def forward(self: BaseValidatorNeuron):
 
     bt.logging.info("Fetching baseline(s)!")
     # get the baseline data, which we also store and check against
+    try:
+        sample.baseline = baseline_loaders[mechanism].get_forecast(sample)
+        assert not get_shape_penalty(sample.desired_output_shape, sample.baseline)
+    except:
+        bt.logging.error(f"Failed to fetch baseline for {mechanism.name}, skipping...")
+        bt.logging.debug(format_exc())
+        return
     sample.baseline = baseline_loaders[mechanism].get_forecast(sample)
     if not torch.isfinite(sample.baseline).all():
         bt.logging.warning("Baseline contains NaN or Inf values, skipping this sample.")
@@ -203,7 +211,7 @@ def parse_miner_inputs(
 
     # pre-calculate penalities since we need those to filter
     return set_penalties(
-        correct_shape=sample.baseline.shape,
+        correct_shape=sample.desired_output_shape,
         miners_data=miners_data
     )
 
